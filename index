@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TKA SMART SD - Generator & Latihan Ujian Kelas 6</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                        },
+                        accent: {
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .view-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .view-section.active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse-alarm {
+            animation: pulse-red 1s infinite alternate;
+        }
+        @keyframes pulse-red {
+            from { color: #ef4444; transform: scale(1); }
+            to { color: #dc2626; transform: scale(1.05); }
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+        /* Print styles */
+        @media print {
+            body { background: white !important; color: black !important; }
+            nav, button, .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .view-section { display: block !important; }
+            .page-break { page-break-after: always; }
+        }
+        .print-only { display: none; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 min-h-screen flex flex-col selection:bg-primary-500 selection:text-white">
+
+    <!-- Toast Notification Overlay -->
+    <div id="toast-container" class="fixed top-20 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <!-- Custom Modal Container -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <div id="modal-card" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full p-6 transform transition-all scale-95 opacity-0">
+            <h3 id="modal-title" class="text-xl font-bold mb-2">Notifikasi</h3>
+            <div id="modal-body" class="text-gray-600 dark:text-gray-300 text-sm mb-6"></div>
+            <div id="modal-actions" class="flex justify-end space-x-3">
+                <!-- Dynamic Buttons -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Navigation Header -->
+    <nav class="bg-primary-600 dark:bg-gray-800 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <!-- App Title / Brand -->
+                <div class="flex items-center space-x-3 cursor-pointer group" onclick="app.navigate('dashboard')">
+                    <div class="bg-white text-primary-600 p-2 rounded-xl shadow group-hover:rotate-6 transition-transform">
+                        <i class="fas fa-graduation-cap text-2xl"></i>
+                    </div>
+                    <div>
+                        <span class="font-extrabold text-xl tracking-tight text-white flex items-center gap-2">
+                            TKA SMART SD
+                            <span class="text-xs bg-accent-500 text-white px-2 py-0.5 rounded-full font-bold">KLS 6</span>
+                        </span>
+                        <p class="text-[10px] text-blue-100 dark:text-gray-400 hidden sm:block">Tes Kemampuan Akademik Sekolah Dasar</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Controls -->
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <!-- User Profile Quick Info -->
+                    <div id="nav-user-badge" class="hidden sm:flex items-center space-x-2 bg-primary-700 dark:bg-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+                        <i class="fas fa-user-circle text-sm text-accent-500"></i>
+                        <span id="nav-student-name">Siswa</span>
+                    </div>
+
+                    <!-- Sound Toggle -->
+                    <button onclick="app.toggleSound()" id="sound-btn" class="p-2 rounded-lg hover:bg-primary-700 dark:hover:bg-gray-700 transition text-white" title="Suara FX">
+                        <i class="fas fa-volume-up text-lg" id="sound-icon"></i>
+                    </button>
+
+                    <!-- Dark Mode Toggle -->
+                    <button onclick="app.toggleDarkMode()" class="p-2 rounded-lg hover:bg-primary-700 dark:hover:bg-gray-700 transition text-white" title="Ubah Tema">
+                        <i class="fas fa-moon text-lg" id="theme-icon"></i>
+                    </button>
+
+                    <!-- Navigation Drawer Switch for Mobile / Direct Actions -->
+                    <button onclick="app.navigate('guide')" class="p-2 rounded-lg hover:bg-primary-700 dark:hover:bg-gray-700 transition text-white" title="Panduan Penggunaan">
+                        <i class="fas fa-circle-question text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN VIEW CONTAINER -->
+    <main class="flex-grow w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- SECTION: USER SETUP (Initial Screen if Name Empty) -->
+        <section id="view-setup" class="view-section">
+            <div class="max-w-md mx-auto my-12 bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 text-center relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-primary-100 dark:bg-primary-900/30 rounded-full blur-2xl"></div>
+                
+                <!-- Elegan & Berwarna Cerah Box Container untuk Logo -->
+                <div class="relative mx-auto mb-6 w-32 h-32 p-1.5 rounded-3xl bg-gradient-to-tr from-amber-400 via-sky-400 to-indigo-500 shadow-xl shadow-sky-400/30 dark:shadow-none hover:scale-105 transition-transform duration-300">
+                    <div class="w-full h-full bg-white dark:bg-gray-800 rounded-[20px] p-3 flex items-center justify-center border border-white/60 dark:border-gray-700 shadow-inner">
+                        <img src="https://iili.io/CU2uox4.png" alt="Logo Ksatria KS04" class="w-full h-full object-contain drop-shadow-md" onerror="this.onerror=null; this.src='https://placehold.co/96x96/3b82f6/ffffff?text=KS04';">
+                    </div>
+                </div>
+
+                <h2 class="text-2xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">Selamat Datang!</h2>
+                <p class="text-gray-600 dark:text-gray-300 text-base font-semibold mb-6">Ksatria KS04</p>
+                
+                <form onsubmit="app.saveUserProfile(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 text-left mb-1 uppercase tracking-wider">Nama Lengkap Siswa</label>
+                        <input type="text" id="setup-name-input" placeholder="Contoh: Muhammad Bintang" required
+                            class="w-full px-4 py-3.5 rounded-2xl border border-gray-200 dark:border-gray-600 bg-gray-50/80 dark:bg-gray-700/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:bg-white focus:outline-none transition text-center font-semibold text-base shadow-sm">
+                    </div>
+                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold rounded-2xl shadow-lg shadow-blue-500/30 hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2 text-base">
+                        <span>Mulai Petualangan Belajar</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- SECTION: DASHBOARD -->
+        <section id="view-dashboard" class="view-section">
+            <!-- Welcome Header Card -->
+            <div class="bg-gradient-to-r from-primary-600 via-primary-500 to-indigo-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl mb-8 relative overflow-hidden">
+                <div class="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 pointer-events-none flex items-center justify-center text-9xl">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div class="relative z-10 max-w-2xl">
+                    <span class="bg-white/20 text-white text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider mb-3 inline-block">Persiapan TKA SD/MI</span>
+                    <h1 class="text-3xl sm:text-4xl font-extrabold mb-2">Halo, <span id="dash-student-name">Siswa</span>! 👋</h1>
+                    <p class="text-blue-100 text-sm sm:text-base mb-6 leading-relaxed">
+                        Siapkan dirimu menghadapi Tes Kemampuan Akademik Matematika dan Bahasa Indonesia dengan latihan interaktif & simulasi realistis.
+                    </p>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="app.navigate('generator')" class="bg-accent-500 hover:bg-accent-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-md hover:shadow-lg transition flex items-center gap-2">
+                            <i class="fas fa-bolt"></i> Mulai Latihan Cepat
+                        </button>
+                        <button onclick="app.navigate('bank')" class="bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 rounded-xl font-semibold transition flex items-center gap-2">
+                            <i class="fas fa-book-open"></i> Jelajah Bank Soal
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Overview Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 text-primary-600 dark:text-primary-400 rounded-xl flex items-center justify-center text-xl font-bold">
+                        <i class="fas fa-circle-check"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">Latihan Selesai</p>
+                        <h3 class="text-2xl font-extrabold text-gray-900 dark:text-white" id="dash-stat-completed">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center text-xl font-bold">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">Nilai Tertinggi</p>
+                        <h3 class="text-2xl font-extrabold text-gray-900 dark:text-white" id="dash-stat-best">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center text-xl font-bold">
+                        <i class="fas fa-cubes"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">Total Bank Soal</p>
+                        <h3 class="text-2xl font-extrabold text-gray-900 dark:text-white" id="dash-stat-totalq">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center text-xl font-bold">
+                        <i class="fas fa-clock-rotate-left"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">Nilai Terakhir</p>
+                        <h3 class="text-2xl font-extrabold text-gray-900 dark:text-white" id="dash-stat-last">-</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Interactive Menu Tiles -->
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-grip text-primary-500"></i> Menu Utama Aplikasi
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Generator Soal Card -->
+                <div onclick="app.navigate('generator')" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-700 transition cursor-pointer group flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-primary-100 dark:bg-gray-700 text-primary-600 dark:text-primary-400 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                            <i class="fas fa-sliders"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1 group-hover:text-primary-600 transition">Generator Paket Latihan</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                            Buat paket latihan custom berdasarkan mata pelajaran, topik spesifik, tingkat kesulitan, dan jumlah soal.
+                        </p>
+                    </div>
+                    <div class="mt-6 flex items-center text-xs font-bold text-primary-600 dark:text-primary-400">
+                        <span>Buat Paket Latihan</span> <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- Bank Soal Card -->
+                <div onclick="app.navigate('bank')" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-700 transition cursor-pointer group flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-teal-100 dark:bg-gray-700 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1 group-hover:text-teal-600 transition">Bank Soal & Kelola</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                            Cari, filter, pelajari kunci jawaban, dan tambah/edit soal buatan sendiri dalam mode guru.
+                        </p>
+                    </div>
+                    <div class="mt-6 flex items-center text-xs font-bold text-teal-600 dark:text-teal-400">
+                        <span>Kelola Bank Soal</span> <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- Riwayat & Evaluasi Card -->
+                <div onclick="app.navigate('history')" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-700 transition cursor-pointer group flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-purple-100 dark:bg-gray-700 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1 group-hover:text-purple-600 transition">Riwayat & Grafik Progres</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                            Pantau pergerakan nilai dari waktu ke waktu dan pelajari materi yang perlu ditingkatkan.
+                        </p>
+                    </div>
+                    <div class="mt-6 flex items-center text-xs font-bold text-purple-600 dark:text-purple-400">
+                        <span>Lihat Perkembangan</span> <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Recent Activity Log -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-md font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <i class="fas fa-history text-gray-400"></i> Latihan Terakhir
+                    </h3>
+                    <button onclick="app.navigate('history')" class="text-xs text-primary-600 hover:underline font-semibold">Lihat Semua</button>
+                </div>
+                <div id="dash-recent-list" class="space-y-3">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: GENERATOR -->
+        <section id="view-generator" class="view-section">
+            <div class="max-w-3xl mx-auto">
+                <button onclick="app.navigate('dashboard')" class="mb-4 text-xs font-bold text-gray-500 hover:text-primary-600 transition flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+                </button>
+
+                <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 shadow-xl border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center space-x-4 mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">
+                        <div class="w-12 h-12 bg-primary-100 text-primary-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Generator Paket Latihan</h2>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Sesuaikan materi latihan sesuai target belajar hari ini</p>
+                        </div>
+                    </div>
+
+                    <form id="generator-form" onsubmit="app.startGeneratedQuiz(event)" class="space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <!-- Subject -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Mata Pelajaran</label>
+                                <select id="gen-subject" onchange="app.updateGenTopics()" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none font-medium">
+                                    <option value="semua">Semua Mata Pelajaran (Campuran)</option>
+                                    <option value="matematika">Matematika</option>
+                                    <option value="bahasa">Bahasa Indonesia</option>
+                                </select>
+                            </div>
+
+                            <!-- Topic -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Materi / Topik Pembahasan</label>
+                                <select id="gen-topic" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none font-medium">
+                                    <option value="semua">Semua Topik Materi</option>
+                                </select>
+                            </div>
+
+                            <!-- Difficulty -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Tingkat Kesulitan</label>
+                                <select id="gen-difficulty" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none font-medium">
+                                    <option value="semua">Campuran (Mudah, Sedang, Sulit)</option>
+                                    <option value="mudah">Mudah</option>
+                                    <option value="sedang">Sedang</option>
+                                    <option value="sulit">Sulit</option>
+                                </select>
+                            </div>
+
+                            <!-- Number of Items -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Jumlah Soal</label>
+                                <select id="gen-count" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none font-medium">
+                                    <option value="5">5 Soal (Latihan Cepat)</option>
+                                    <option value="10" selected>10 Soal (Standar)</option>
+                                    <option value="15">15 Soal (Lengkap)</option>
+                                    <option value="20">20 Soal (Simulasi Intensif)</option>
+                                </select>
+                            </div>
+
+                            <!-- Duration -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Durasi Waktu</label>
+                                <select id="gen-timer" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none font-medium">
+                                    <option value="0">Tanpa Batas Waktu</option>
+                                    <option value="10">10 Menit</option>
+                                    <option value="20" selected>20 Menit</option>
+                                    <option value="30">30 Menit</option>
+                                    <option value="45">45 Menit</option>
+                                </select>
+                            </div>
+
+                            <!-- Test Mode -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Mode Pelaksanaan</label>
+                                <select id="gen-mode" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none font-medium">
+                                    <option value="latihan">Mode Belajar & Latihan (Bisa Cek Kunci/Pembahasan)</option>
+                                    <option value="simulasi">Mode Simulasi Ujian (Kunci Ditampilkan di Akhir)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="pt-4 flex flex-col sm:flex-row gap-3">
+                            <button type="submit" class="flex-1 py-3.5 bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base">
+                                <i class="fas fa-play"></i> Mulai Kerjakan Soal
+                            </button>
+                            <button type="button" onclick="app.printWorksheetFromGen()" class="px-5 py-3.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold rounded-xl transition flex items-center justify-center gap-2 text-sm">
+                                <i class="fas fa-print"></i> Cetak Lembar Soal
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: BANK SOAL -->
+        <section id="view-bank" class="view-section">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <i class="fas fa-database text-teal-500"></i> Bank Soal TKA SD
+                    </h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Daftar koleksi soal Matematika & Bahasa Indonesia terstruktur</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="app.openQuestionModal()" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                        <i class="fas fa-plus"></i> Tambah Soal
+                    </button>
+                    <button onclick="app.exportBankJSON()" class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 px-3 py-2 rounded-xl text-xs font-semibold transition">
+                        <i class="fas fa-download"></i> Ekspor JSON
+                    </button>
+                    <label class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 px-3 py-2 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1">
+                        <i class="fas fa-upload"></i> Impor JSON
+                        <input type="file" id="bank-import-file" accept=".json" class="hidden" onchange="app.importBankJSON(event)">
+                    </label>
+                    <button onclick="app.resetBankToDefault()" class="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-3 py-2 rounded-xl text-xs font-semibold hover:bg-red-100 transition">
+                        <i class="fas fa-rotate-left"></i> Reset Bank
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div>
+                    <input type="text" id="bank-search" oninput="app.renderBankList()" placeholder="Cari kata kunci soal..."
+                        class="w-full px-3 py-2 text-xs rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+                <div>
+                    <select id="bank-filter-subject" onchange="app.renderBankList()" class="w-full px-3 py-2 text-xs rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 outline-none focus:ring-2 focus:ring-teal-500">
+                        <option value="semua">Semua Mata Pelajaran</option>
+                        <option value="matematika">Matematika</option>
+                        <option value="bahasa">Bahasa Indonesia</option>
+                    </select>
+                </div>
+                <div>
+                    <select id="bank-filter-diff" onchange="app.renderBankList()" class="w-full px-3 py-2 text-xs rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 outline-none focus:ring-2 focus:ring-teal-500">
+                        <option value="semua">Semua Tingkat Kesulitan</option>
+                        <option value="mudah">Mudah</option>
+                        <option value="sedang">Sedang</option>
+                        <option value="sulit">Sulit</option>
+                    </select>
+                </div>
+                <div>
+                    <select id="bank-filter-type" onchange="app.renderBankList()" class="w-full px-3 py-2 text-xs rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 outline-none focus:ring-2 focus:ring-teal-500">
+                        <option value="semua">Semua Bentuk Soal</option>
+                        <option value="pg">Pilihan Ganda</option>
+                        <option value="pg_kompleks">PG Kompleks</option>
+                        <option value="isian">Isian Singkat</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Questions Cards Grid -->
+            <div id="bank-list-container" class="space-y-4">
+                <!-- Dynamic Content -->
+            </div>
+        </section>
+
+        <!-- SECTION: ACTIVE QUIZ RUNNER -->
+        <section id="view-quiz" class="view-section">
+            <!-- Quiz Sticky Header Controls -->
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 mb-6 flex flex-wrap items-center justify-between gap-4 sticky top-20 z-30">
+                <div class="flex items-center space-x-3">
+                    <span id="quiz-mode-badge" class="bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300 px-3 py-1 rounded-full text-xs font-bold uppercase">
+                        Mode Latihan
+                    </span>
+                    <span id="quiz-progress-text" class="text-xs font-bold text-gray-500 dark:text-gray-400">
+                        Soal <span id="quiz-current-num">1</span> dari <span id="quiz-total-num">10</span>
+                    </span>
+                </div>
+
+                <!-- Timer Display -->
+                <div id="quiz-timer-box" class="flex items-center space-x-2 bg-gray-100 dark:bg-gray-700 px-4 py-1.5 rounded-xl border border-gray-200 dark:border-gray-600 font-mono text-sm font-bold text-gray-800 dark:text-gray-200">
+                    <i class="fas fa-stopwatch text-accent-500"></i>
+                    <span id="quiz-timer-display">--:--</span>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center space-x-2">
+                    <button onclick="app.toggleFlagCurrentQuestion()" id="quiz-flag-btn" class="px-3 py-1.5 rounded-xl border border-gray-300 dark:border-gray-600 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-1">
+                        <i class="fas fa-bookmark" id="quiz-flag-icon"></i>
+                        <span id="quiz-flag-label">Ragu</span>
+                    </button>
+                    <button onclick="app.confirmFinishQuiz()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow transition flex items-center gap-1">
+                        <i class="fas fa-check-double"></i> Selesai
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quiz Layout: Grid Question Content Left, Navigation Right -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Main Active Question Container (3 Columns Left) -->
+                <div class="lg:col-span-3 bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-3xl shadow-md border border-gray-100 dark:border-gray-700 flex flex-col justify-between min-h-[420px]">
+                    <div>
+                        <!-- Question Header Meta -->
+                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-gray-700">
+                            <span id="quiz-q-subject-badge" class="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase">
+                                Matematika • Bilangan Cacah
+                            </span>
+                            <span id="quiz-q-diff-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 font-semibold">
+                                Mudah
+                            </span>
+                        </div>
+
+                        <!-- Question Text Content -->
+                        <div id="quiz-q-text" class="text-base sm:text-lg font-medium text-gray-900 dark:text-white leading-relaxed mb-6">
+                            <!-- Question body -->
+                        </div>
+
+                        <!-- Options / Inputs Area -->
+                        <div id="quiz-options-container" class="space-y-3 mb-6">
+                            <!-- Options rendered dynamically -->
+                        </div>
+
+                        <!-- Instant Feedback Box (Only for Mode Latihan if enabled) -->
+                        <div id="quiz-instant-feedback" class="hidden p-4 rounded-2xl mb-6 text-sm">
+                            <!-- Explanations -->
+                        </div>
+                    </div>
+
+                    <!-- Bottom Prev/Next Controls -->
+                    <div class="flex items-center justify-between pt-6 border-t border-gray-100 dark:border-gray-700">
+                        <button onclick="app.prevQuestion()" id="quiz-prev-btn" class="px-5 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl text-xs font-bold transition flex items-center gap-2">
+                            <i class="fas fa-chevron-left"></i> Sebelumnya
+                        </button>
+                        <button onclick="app.nextQuestion()" id="quiz-next-btn" class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow">
+                            Berikutnya <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Navigation Drawer (1 Column Right) -->
+                <div class="lg:col-span-1 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 h-fit">
+                    <h3 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Navigasi Soal</h3>
+                    <div id="quiz-nav-grid" class="grid grid-cols-5 gap-2 mb-4">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div class="pt-3 border-t border-gray-100 dark:border-gray-700 space-y-1.5 text-[11px] text-gray-500">
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 bg-primary-600 rounded"></span> Dijawab</div>
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 bg-amber-400 rounded"></span> Ragu-ragu</div>
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 border-2 border-gray-300 rounded"></span> Belum dijawab</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: RESULTS SUMMARY -->
+        <section id="view-results" class="view-section">
+            <div class="max-w-4xl mx-auto">
+                <!-- Certificate / Score Hero Banner -->
+                <div class="bg-gradient-to-br from-primary-600 via-primary-700 to-indigo-800 rounded-3xl p-6 sm:p-10 text-white shadow-2xl mb-8 text-center relative overflow-hidden">
+                    <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-xl"></div>
+                    <div class="relative z-10">
+                        <span class="bg-white/20 text-white text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider inline-block mb-3">Hasil Evaluasi TKA</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold mb-1" id="res-student-name">Nama Siswa</h2>
+                        <p class="text-blue-200 text-xs sm:text-sm mb-6" id="res-timestamp">Tanggal Latihan</p>
+
+                        <!-- Score Circle -->
+                        <div class="w-36 h-36 mx-auto bg-white text-gray-900 rounded-full flex flex-col items-center justify-center shadow-2xl border-4 border-amber-400 mb-4 transform hover:scale-105 transition-transform">
+                            <span class="text-xs font-extrabold text-gray-400 uppercase">Nilai Akhir</span>
+                            <span class="text-4xl font-black text-primary-600" id="res-score-val">0</span>
+                            <span class="text-[10px] text-gray-500 font-semibold" id="res-score-scale">skala 100</span>
+                        </div>
+
+                        <!-- Feedback Category -->
+                        <h3 class="text-xl font-bold text-amber-300 mb-2" id="res-badge-title">Sangat Baik!</h3>
+                        <p class="text-xs sm:text-sm text-blue-100 max-w-lg mx-auto leading-relaxed" id="res-badge-desc">
+                            Umpan balik pembelajaran siswa.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Stats Breakdown Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase mb-1">Benar</p>
+                        <p class="text-2xl font-black text-emerald-600" id="res-stat-correct">0</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase mb-1">Salah</p>
+                        <p class="text-2xl font-black text-red-500" id="res-stat-wrong">0</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase mb-1">Kosong</p>
+                        <p class="text-2xl font-black text-amber-500" id="res-stat-empty">0</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase mb-1">Waktu</p>
+                        <p class="text-xl font-black text-primary-600" id="res-stat-time">0m 0s</p>
+                    </div>
+                </div>
+
+                <!-- Diagnostic & Topic Mastery Section -->
+                <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-brain text-accent-500"></i> Analisis Penguasaan Materi
+                    </h3>
+                    <div id="res-topic-breakdown" class="space-y-4">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Next Action Buttons -->
+                <div class="flex flex-wrap justify-center gap-4">
+                    <button onclick="app.showReview()" class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-xl font-bold shadow transition flex items-center gap-2">
+                        <i class="fas fa-list-check"></i> Pelajari Pembahasan Soal
+                    </button>
+                    <button onclick="app.navigate('generator')" class="bg-accent-500 hover:bg-accent-600 text-white px-6 py-3 rounded-xl font-bold shadow transition flex items-center gap-2">
+                        <i class="fas fa-rotate-right"></i> Ulangi / Latihan Baru
+                    </button>
+                    <button onclick="app.navigate('dashboard')" class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-6 py-3 rounded-xl font-bold transition flex items-center gap-2">
+                        <i class="fas fa-house"></i> Ke Dashboard
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: REVIEW SOLUTIONS -->
+        <section id="view-review" class="view-section">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <i class="fas fa-book-open-reader text-primary-500"></i> Pembahasan Soal
+                        </h2>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Pelajari solusi step-by-step dan alasan jawaban benar</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <select id="review-filter" onchange="app.renderReviewList()" class="px-3 py-2 text-xs rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none">
+                            <option value="semua">Tampilkan Semua Soal</option>
+                            <option value="salah">Hanya Soal Salah</option>
+                            <option value="benar">Hanya Soal Benar</option>
+                        </select>
+                        <button onclick="app.navigate('results')" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-xs font-bold rounded-xl transition">
+                            <i class="fas fa-arrow-left"></i> Hasil
+                        </button>
+                    </div>
+                </div>
+
+                <div id="review-list-container" class="space-y-6">
+                    <!-- Dynamic List -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: HISTORY & ANALYTICS -->
+        <section id="view-history" class="view-section">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <i class="fas fa-chart-line text-purple-500"></i> Riwayat & Progres Belajar
+                        </h2>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Grafik perkembangan nilai dan catatan sesi latihan</p>
+                    </div>
+                    <button onclick="app.confirmClearHistory()" class="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 px-3 py-2 rounded-xl text-xs font-semibold transition">
+                        <i class="fas fa-trash"></i> Hapus Riwayat
+                    </button>
+                </div>
+
+                <!-- Analytics SVG Chart Box -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
+                    <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">Grafik Perkembangan Nilai Terakhir</h3>
+                    <div id="history-chart-container" class="w-full h-48 flex items-end justify-between gap-2 pt-6 pb-2 px-4 border-b border-gray-200 dark:border-gray-700">
+                        <!-- Render SVG / Bar Chart Dynamically -->
+                    </div>
+                </div>
+
+                <!-- Detailed History Table -->
+                <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <div class="p-4 border-b border-gray-100 dark:border-gray-700 font-bold text-sm text-gray-800 dark:text-gray-200">
+                        Daftar Sesi Latihan
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-gray-50 dark:bg-gray-700/50 text-gray-500 uppercase font-semibold">
+                                <tr>
+                                    <th class="p-3.5">Tanggal</th>
+                                    <th class="p-3.5">Mata Pelajaran</th>
+                                    <th class="p-3.5">Mode / Jumlah</th>
+                                    <th class="p-3.5">Waktu</th>
+                                    <th class="p-3.5">Nilai</th>
+                                    <th class="p-3.5 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body" class="divide-y divide-gray-100 dark:divide-gray-700 text-gray-700 dark:text-gray-300">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: USER GUIDE & INSTRUCTIONS -->
+        <section id="view-guide" class="view-section">
+            <div class="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-700">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-circle-question text-accent-500"></i> Panduan Penggunaan TKA SMART SD
+                </h2>
+                
+                <div class="space-y-6 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                    <div class="p-4 bg-primary-50 dark:bg-gray-700/50 rounded-2xl border-l-4 border-primary-500">
+                        <h3 class="font-bold text-primary-700 dark:text-primary-300 text-base mb-1">Apa itu TKA SMART SD?</h3>
+                        <p>
+                            Aplikasi interaktif khusus dirancang untuk membantu siswa kelas 6 SD/MI bersiap menghadapi Tes Kemampuan Akademik (TKA) Mata Pelajaran Matematika dan Bahasa Indonesia.
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3 class="font-bold text-gray-900 dark:text-white text-base mb-2">🚀 Fitur-Fitur Utama:</h3>
+                        <ul class="list-disc pl-5 space-y-2">
+                            <li><strong>Generator Soal Custom:</strong> Pilih topik spesifik yang ingin dilatih, jumlah soal, dan durasi timer.</li>
+                            <li><strong>Mode Latihan vs Simulasi:</strong> Pada mode latihan, kamu bisa langsung mengecek kunci jawaban. Pada mode simulasi, nilai & kunci diberikan di akhir.</li>
+                            <li><strong>Bank Soal Interaktif (Mode Guru):</strong> Guru atau orang tua dapat menambahkan, mengedit, atau mengimpor/mengekspor koleksi soal JSON.</li>
+                            <li><strong>Penilaian Otomatis & Analisis Topik:</strong> Menampilkan skor akhir skala 100 serta analisis penguasaan materi per kompetensi.</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 class="font-bold text-gray-900 dark:text-white text-base mb-2">💡 Tips Belajar Efektif:</h3>
+                        <ol class="list-decimal pl-5 space-y-2">
+                            <li>Mulailah dengan latihan per topik materi yang paling sulit bagimu.</li>
+                            <li>Gunakan mode <strong>Simulasi Ujian</strong> untuk melatih ketepatan waktu sebelum ujian asli.</li>
+                            <li>Selalu periksa <strong>Pembahasan Soal</strong> setelah selesai mengerjakan untuk memahami konsep dan rumus.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- QUESTION MODAL (FOR CREATING/EDITING QUESTIONS - MODE GURU) -->
+    <div id="question-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-2xl w-full p-6 sm:p-8 my-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b border-gray-100 dark:border-gray-700">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white" id="modal-q-title">Tambah Soal Baru</h3>
+                <button onclick="app.closeQuestionModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fas fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <form id="question-modal-form" onsubmit="app.saveQuestionForm(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="qform-id">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold mb-1 uppercase">Mata Pelajaran</label>
+                        <select id="qform-subject" class="w-full p-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white outline-none">
+                            <option value="matematika">Matematika</option>
+                            <option value="bahasa">Bahasa Indonesia</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1 uppercase">Topik Materi</label>
+                        <input type="text" id="qform-topic" placeholder="Contoh: Operasi Hitung Campuran" required
+                            class="w-full p-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold mb-1 uppercase">Tingkat Kesulitan</label>
+                        <select id="qform-diff" class="w-full p-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white outline-none">
+                            <option value="mudah">Mudah</option>
+                            <option value="sedang">Sedang</option>
+                            <option value="sulit">Sulit</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1 uppercase">Bentuk Soal</label>
+                        <select id="qform-type" onchange="app.toggleFormOptionsDisplay()" class="w-full p-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white outline-none">
+                            <option value="pg">Pilihan Ganda (Single Choice)</option>
+                            <option value="pg_kompleks">PG Kompleks (Multiple Checkboxes)</option>
+                            <option value="isian">Isian Singkat</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold mb-1 uppercase">Pertanyaan / Stem Soal</label>
+                    <textarea id="qform-stem" rows="4" placeholder="Tuliskan teks pertanyaan soal..." required
+                        class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white outline-none"></textarea>
+                </div>
+
+                <!-- Dynamic Options Section -->
+                <div id="qform-options-box" class="space-y-2 border p-3 rounded-2xl border-gray-200 dark:border-gray-700">
+                    <label class="block font-bold uppercase mb-1">Pilihan Jawaban (A, B, C, D)</label>
+                    <div class="flex items-center gap-2"><span class="font-bold w-4">A.</span><input type="text" id="qform-opt-0" class="w-full p-2 rounded-lg border dark:bg-gray-700"></div>
+                    <div class="flex items-center gap-2"><span class="font-bold w-4">B.</span><input type="text" id="qform-opt-1" class="w-full p-2 rounded-lg border dark:bg-gray-700"></div>
+                    <div class="flex items-center gap-2"><span class="font-bold w-4">C.</span><input type="text" id="qform-opt-2" class="w-full p-2 rounded-lg border dark:bg-gray-700"></div>
+                    <div class="flex items-center gap-2"><span class="font-bold w-4">D.</span><input type="text" id="qform-opt-3" class="w-full p-2 rounded-lg border dark:bg-gray-700"></div>
+                </div>
+
+                <div>
+                    <label class="block font-bold mb-1 uppercase">Kunci Jawaban</label>
+                    <input type="text" id="qform-answer" placeholder="Contoh: 0 (untuk indeks pilihan A) atau kata kunci isian" required
+                        class="w-full p-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white outline-none">
+                    <p class="text-[10px] text-gray-500 mt-1">Untuk PG: masukkan 0 (A), 1 (B), 2 (C), atau 3 (D). Untuk PG Kompleks: masukkan angka pisah koma misal: 0,2.</p>
+                </div>
+
+                <div>
+                    <label class="block font-bold mb-1 uppercase">Pembahasan Lengkap</label>
+                    <textarea id="qform-explanation" rows="3" placeholder="Penjelasan cara penyelesaian..." required
+                        class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white outline-none"></textarea>
+                </div>
+
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="app.closeQuestionModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-xl">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-teal-600 text-white font-bold rounded-xl shadow">Simpan Soal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hidden Print Printable Container -->
+    <div id="print-container" class="print-only p-8">
+        <!-- Rendered dynamically for printing -->
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 py-6 text-center text-xs text-gray-500 dark:text-gray-400 no-print mt-auto">
+        <div class="max-w-7xl mx-auto px-4">
+            <p class="font-semibold">TKA SMART SD &copy; 2026 • Platform Latihan Tes Kemampuan Akademik Kelas 6 SD/MI</p>
+            <p class="text-[10px] mt-1 text-gray-400">Dirancang secara interaktif untuk mendukung keberhasilan siswa Indonesia.</p>
+        </div>
+    </footer>
+
+    <!-- MAIN JAVASCRIPT APP LOGIC -->
+    <script>
+        /**
+         * KONFIGURASI API BACKEND ONLINE (GOOGLE APPS SCRIPT)
+         * Ganti URL di bawah ini dengan URL Web App Apps Script Anda!
+         */
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbytkf2OP1Pfyb-9Ccaya9xllsCGmePOSUteTBBGGtCyABdy_XUjwU1qMOnF4OPUoeazXA/exec";
+
+        /**
+         * DEFAULT QUESTION BANK DATA
+         * Rich, realistic 6th-grade standard items for Mathematics & Bahasa Indonesia
+         */
+        const DEFAULT_QUESTIONS = [
+            // MATHEMATICS
+            {
+                id: 'q_math_1',
+                subject: 'matematika',
+                topic: 'Operasi Hitung Campuran',
+                difficulty: 'mudah',
+                type: 'pg',
+                stem: 'Hasil dari $125 + 75 \\times 4 - 250 \\div 5$ adalah...',
+                options: ['375', '425', '750', '325'],
+                answer: '0', // Index 0 -> 375
+                explanation: 'Urutan operasi hitung campuran:\n1. Perkalian dan Pembagian didahulukan:\n   $75 \\times 4 = 300$\n   $250 \\div 5 = 50$\n2. Penjumlahan dan Pengurangan dari kiri ke kanan:\n   $125 + 300 - 50 = 425 - 50 = 375$.',
+                score: 10
+            },
+            {
+                id: 'q_math_2',
+                subject: 'matematika',
+                topic: 'Pecahan dan Persen',
+                difficulty: 'sedang',
+                type: 'pg',
+                stem: 'Ibu memiliki gula pasir sebanyak 2,5 kg. Sebanyak 40% dari gula tersebut digunakan untuk membuat kue. Sisa gula pasir milik ibu sekarang adalah...',
+                options: ['1,0 kg', '1,25 kg', '1,5 kg', '1,75 kg'],
+                answer: '2', // Index 2 -> 1,5 kg
+                explanation: 'Gula yang digunakan = 40% x 2,5 kg = 0,4 x 2,5 = 1,0 kg.\nSisa gula ibu = 2,5 kg - 1,0 kg = 1,5 kg.',
+                score: 10
+            },
+            {
+                id: 'q_math_3',
+                subject: 'matematika',
+                topic: 'FPB dan KPK',
+                difficulty: 'sedang',
+                type: 'pg',
+                stem: 'Lampu hias A menyala setiap 8 detik, lampu B menyala setiap 12 detik, dan lampu C menyala setiap 15 detik. Jika ketiga lampu menyala bersamaan pada pukul 08.00, pada pukul berapa ketiga lampu akan menyala bersamaan lagi?',
+                options: ['Pukul 08.02', 'Pukul 08.04', 'Pukul 08.05', 'Pukul 08.10'],
+                answer: '0', // Index 0 -> 08.02
+                explanation: 'Cari KPK dari 8, 12, dan 15:\n8 = $2^3$\n12 = $2^2 \\times 3$\n15 = $3 \\times 5$\nKPK = $2^3 \\times 3 \\times 5 = 8 \\times 3 \\times 5 = 120$ detik.\n120 detik = 2 menit.\nMenyala bersama lagi = 08.00 + 2 menit = 08.02.',
+                score: 10
+            },
+            {
+                id: 'q_math_4',
+                subject: 'matematika',
+                topic: 'Volume Bangun Ruang',
+                difficulty: 'sulit',
+                type: 'pg',
+                stem: 'Sebuah wadah air berbentuk balok memiliki ukuran panjang 80 cm, lebar 50 cm, dan tinggi 60 cm. Wadah tersebut telah terisi air sebanyak $\\frac{3}{4}$ bagian. Berapa liter volume air di dalam wadah tersebut?',
+                options: ['180 liter', '240 liter', '360 liter', '120 liter'],
+                answer: '0', // 180 liter
+                explanation: 'Volume total balok = p x l x t = 80 x 50 x 60 = 240.000 cm³ = 240 liter.\nVolume air = 3/4 x 240 liter = 180 liter.',
+                score: 15
+            },
+            {
+                id: 'q_math_5',
+                subject: 'matematika',
+                topic: 'Perbandingan dan Proporsi',
+                difficulty: 'sedang',
+                type: 'isian',
+                stem: 'Perbandingan jumlah kelereng Andi dan Budi adalah 3 : 5. Jika selisih kelereng mereka adalah 16 butir, berapa jumlah total kelereng mereka berdua?',
+                options: [],
+                answer: '64',
+                explanation: 'Selisih rasio = 5 - 3 = 2.\nJumlah rasio = 3 + 5 = 8.\nTotal kelereng = (Jumlah rasio / Selisih rasio) x Selisih kelereng = (8 / 2) x 16 = 4 x 16 = 64 butir.',
+                score: 10
+            },
+            {
+                id: 'q_math_6',
+                subject: 'matematika',
+                topic: 'Statistika & Rata-rata',
+                difficulty: 'sedang',
+                type: 'pg',
+                stem: 'Data nilai hasil ulangan Matematika 8 orang siswa adalah sebagai berikut: 7, 8, 9, 6, 8, 10, 7, 9. Rata-rata (mean) nilai ulangan mereka adalah...',
+                options: ['7,5', '8,0', '8,25', '8,5'],
+                answer: '1', // 8,0
+                explanation: 'Jumlah nilai = 7 + 8 + 9 + 6 + 8 + 10 + 7 + 9 = 64.\nBanyak siswa = 8.\nRata-rata = 64 / 8 = 8,0.',
+                score: 10
+            },
+            {
+                id: 'q_math_7',
+                subject: 'matematika',
+                topic: 'Geometri & Sifat Bangun',
+                difficulty: 'sedang',
+                type: 'pg_kompleks',
+                stem: 'Pilihlah seluruh pernyataan yang BENAR mengenai sifat-sifat bangun datar Trapesium Sama Kaki berikut:',
+                options: [
+                    'Memiliki tepat sepasang sisi yang sejajar.',
+                    'Memiliki dua buah sudut alas yang sama besar.',
+                    'Kedua diagonalnya memiliki panjang yang tidak sama.',
+                    'Memiliki satu sumbu simetri.'
+                ],
+                answer: '0,1,3', // Checkboxes 0, 1, 3 are correct
+                explanation: 'Trapesium sama kaki memiliki:\n1. Sepasang sisi sejajar (Benar)\n2. Sudut-sudut alas sama besar (Benar)\n3. Kedua diagonalnya SAMA PANJANG (Pernyataan 3 salah)\n4. Memiliki 1 sumbu simetri (Benar).',
+                score: 15
+            },
+            {
+                id: 'q_math_8',
+                subject: 'matematika',
+                topic: 'Pengukuran Satuan Berat',
+                difficulty: 'mudah',
+                type: 'pg',
+                stem: 'Ibu membeli 2,5 kg tepung terigu dan 750 gram gula pasir. Kemudian Ibu memakai 1,2 kg dari seluruh bahan tersebut untuk membuat kue. Berat sisa bahan kue milik Ibu adalah...',
+                options: ['1,85 kg', '2,05 kg', '2,45 kg', '3,25 kg'],
+                answer: '1', // 2,05 kg
+                explanation: 'Total bahan = 2,5 kg + 0,75 kg = 3,25 kg.\nSisa bahan = 3,25 kg - 1,2 kg = 2,05 kg.',
+                score: 10
+            },
+            {
+                id: 'q_math_9',
+                subject: 'matematika',
+                topic: 'Kecepatan dan Jarak',
+                difficulty: 'sedang',
+                type: 'pg',
+                stem: 'Pak Budi bersepeda sejauh 18 km dalam waktu 1 jam 30 menit. Jika kecepatannya tetap, berapa jarak yang dapat ditempuh Pak Budi dalam waktu 2 jam 15 menit?',
+                options: ['24 km', '27 km', '30 km', '32 km'],
+                answer: '1', // 27 km
+                explanation: 'Waktu awal = 1,5 jam. Kecepatan = 18 km / 1,5 jam = 12 km/jam.\nWaktu kedua = 2 jam 15 menit = 2,25 jam.\nJarak = Kecepatan x Waktu = 12 km/jam x 2,25 jam = 27 km.',
+                score: 10
+            },
+            {
+                id: 'q_math_10',
+                subject: 'matematika',
+                topic: 'Keliling & Luas Bangun Datar',
+                difficulty: 'sulit',
+                type: 'pg',
+                stem: 'Sebuah taman berbentuk persegi panjang berukuran panjang 18 m dan lebar 12 m. Di sekeliling taman akan dipasang pagar, kecuali bagian pintu masuk selebar 3 m. Jika biaya pemasangan pagar adalah Rp45.000 per meter, berapa total biaya seluruh pemasangan pagar?',
+                options: ['Rp2.435.000', 'Rp2.565.000', 'Rp2.700.000', 'Rp2.835.000'],
+                answer: '1', // Rp2.565.000
+                explanation: 'Keliling taman = 2 x (18 + 12) = 2 x 30 = 60 meter.\nPanjang pagar = Keliling - lebar pintu = 60 m - 3 m = 57 meter.\nTotal biaya = 57 m x Rp45.000/m = Rp2.565.000.',
+                score: 15
+            },
+            {
+                id: 'q_math_11',
+                subject: 'matematika',
+                topic: 'Pola Bilangan (HOTS)',
+                difficulty: 'sulit',
+                type: 'isian',
+                stem: 'Perhatikan pola bilangan bertingkat berikut: 2, 5, 10, 17, 26, ... Bilangan selanjutnya yang tepat untuk mengisi titik-titik tersebut adalah...',
+                options: [],
+                answer: '37',
+                explanation: 'Selisih antarbilangan:\n5 - 2 = 3\n10 - 5 = 5\n17 - 10 = 7\n26 - 17 = 9\nBeda selisih bertambah 2 (pola bilangan ganjil: 3, 5, 7, 9, 11).\nBilangan berikutnya = 26 + 11 = 37.',
+                score: 15
+            },
+            {
+                id: 'q_math_12',
+                subject: 'matematika',
+                topic: 'FPB dan Pembagian Rata',
+                difficulty: 'sedang',
+                type: 'pg',
+                stem: 'Pak Tani memiliki 60 buah mangga dan 84 buah jeruk. Semua buah akan dimasukkan ke dalam beberapa kantong plastik sehingga setiap kantong berisi jumlah mangga yang sama banyak dan jeruk yang sama banyak. Berapa jumlah kantong plastik terbanyak yang dapat dibuat?',
+                options: ['6 kantong', '12 kantong', '14 kantong', '18 kantong'],
+                answer: '1', // 12 kantong
+                explanation: 'Mencari FPB dari 60 dan 84:\n60 = 2² x 3 x 5\n84 = 2² x 3 x 7\nFPB = 2² x 3 = 4 x 3 = 12.\nJadi paling banyak dibuat 12 kantong plastik.',
+                score: 10
+            },
+
+            // BAHASA INDONESIA
+            {
+                id: 'q_indo_1',
+                subject: 'bahasa',
+                topic: 'Ide Pokok & Informasi Tersurat',
+                difficulty: 'mudah',
+                type: 'pg',
+                stem: 'Bacalah teks berikut!\n"Hutan mangrove memiliki peran sangat vital bagi ekosistem pesisir pantai. Akar mangrove yang kokoh dapat menahan hempasan gelombang laut sehingga mencegah erosi dan abrasi pantai. Selain itu, hutan mangrove juga menjadi tempat berkembang biak berbagai jenis ikan dan udang."\n\nIde pokok paragraf di atas adalah...',
+                options: [
+                    'Penyebab abrasi pantai di kawasan pesisir.',
+                    'Manfaat dan peran penting hutan mangrove bagi pesisir.',
+                    'Tempat hidup ikan dan udang laut.',
+                    'Cara menanam pohon mangrove yang benar.'
+                ],
+                answer: '1',
+                explanation: 'Gagasan utama paragraf dibahas pada kalimat pertama: "Hutan mangrove memiliki peran sangat vital...", lalu diikuti kalimat penjelas tentang fungsi menahan gelombang dan habitat hewan.',
+                score: 10
+            },
+            {
+                id: 'q_indo_2',
+                subject: 'bahasa',
+                topic: 'Makna Kata & Ungkapan',
+                difficulty: 'mudah',
+                type: 'pg',
+                stem: 'Bacalah kalimat berikut!\n"Para petani di Desa Sukamaju harus memutar otak agar tanaman padi mereka tidak rusak akibat serangan hama belalang."\n\nMakna ungkapan "memutar otak" pada kalimat di atas adalah...',
+                options: ['Bekerja keras tanpa istirahat', 'Berpikir sungguh-sungguh mencari cara', 'Merasa bingung dan putus asa', 'Mengeluarkan banyak modal uang'],
+                answer: '1',
+                explanation: 'Ungkapan "memutar otak" berarti berpikir secara keras atau sungguh-sungguh untuk menyelesaikan masalah.',
+                score: 10
+            },
+            {
+                id: 'q_indo_3',
+                subject: 'bahasa',
+                topic: 'Teks Prosedur & Urutan',
+                difficulty: 'sedang',
+                type: 'pg',
+                stem: 'Perhatikan langkah-langkah acak berikut!\n(1) Masukkan buah alpukat dan es batu ke dalam blender.\n(2) Tuangkan jus alpukat ke dalam gelas saji.\n(3) Siapkan buah alpukat yang sudah matang dan kerok daging buahnya.\n(4) Tambahkan susu kental manis dan sedikit air matang.\n(5) Nyalakan blender hingga semua bahan halus.\n\nUrutan petunjuk membuat jus alpukat yang tepat adalah...',
+                options: ['(3) - (1) - (4) - (5) - (2)', '(3) - (4) - (1) - (2) - (5)', '(1) - (3) - (4) - (5) - (2)', '(3) - (1) - (5) - (4) - (2)'],
+                answer: '0',
+                explanation: 'Urutan logis teks prosedur membuat jus:\n(3) Siapkan & kerok alpukat -> (1) Masukkan ke blender -> (4) Tambahkan susu & air -> (5) Blender hingga halus -> (2) Tuangkan ke gelas.',
+                score: 10
+            },
+            {
+                id: 'q_indo_4',
+                subject: 'bahasa',
+                topic: 'Simpulan Teks & Hubungan Sebab-Akibat',
+                difficulty: 'sedang',
+                type: 'pg',
+                stem: 'Bacalah teks berikut!\n"Kebiasaan mengonsumsi makanan manis berlebihan dan jarang menggosok gigi sebelum tidur dapat menyebabkan penumpukan plak di gigi. Plak yang dibiarkan lama-lama akan melubangi lapisan email gigi sehingga memicu rasa sakit gigi yang hebat."\n\nSimpulan yang paling tepat dari bacaan tersebut adalah...',
+                options: [
+                    'Menggosok gigi harus dilakukan lima kali sehari.',
+                    'Kesehatan gigi dipengaruhi oleh kebiasaan makan dan kebersihan mulut.',
+                    'Makanan manis merupakan satu-satunya penyebab sakit gigi.',
+                    'Email gigi tidak akan melubang jika kita sering minum air hangat.'
+                ],
+                answer: '1',
+                explanation: 'Simpulan merangkum poin utama teks: hubungan antara pola makanan manis & kebiasaan sikat gigi terhadap kesehatan gigi.',
+                score: 10
+            },
+            {
+                id: 'q_indo_5',
+                subject: 'bahasa',
+                topic: 'Informasi Tersirat & Amanat Narasi',
+                difficulty: 'sulit',
+                type: 'pg',
+                stem: 'Bacalah kutipan cerita berikut!\n"Rian melihat sebuah dompet terjatuh di halaman sekolah. Saat dibuka, di dalamnya terdapat sejumlah uang kertas dan kartu identitas milik Pak Budi, penjaga sekolah. Meskipun Rian sangat membutuhkan uang untuk membeli buku gambar, ia segera berlari menuju ruang penjaga sekolah untuk mengembalikan dompet tersebut."\n\nAmanat yang terkandung dalam kutipan cerita di atas adalah...',
+                options: [
+                    'Selalu belilah buku gambar sebelum pergi ke sekolah.',
+                    'Kejujuran harus selalu diutamakan meskipun dalam situasi sulit.',
+                    'Jangan pernah membawa uang tunai berlebihan ke sekolah.',
+                    'Tolonglah orang lain jika orang tersebut menjanjikan imbalan.'
+                ],
+                answer: '1',
+                explanation: 'Amanat adalah pesan moral cerita. Tindakan Rian mengembalikan dompet milik Pak Budi meskipun ia sedang butuh uang menunjukkan nilai kejujuran yang tinggi.',
+                score: 15
+            },
+            {
+                id: 'q_indo_6',
+                subject: 'bahasa',
+                topic: 'Teks Informasi Visual & Diagram',
+                difficulty: 'sedang',
+                type: 'isian',
+                stem: 'Pengumuman: "Lomba Mewarnai Tingkat SD/MI akan dilaksanakan pada hari Sabtu, 15 November 2026. Pendaftaran dibuka hingga tanggal 10 November 2026 tanpa dipungut biaya."\n\nBerdasarkan pengumuman di atas, batas akhir pendaftaran peserta lomba adalah tanggal... (Tulis tanggal dan bulan)',
+                options: [],
+                answer: '10 November 2026',
+                explanation: 'Informasi tersurat pada teks pengumuman menyebutkan secara jelas bahwa pendaftaran dibuka hingga tanggal 10 November 2026.',
+                score: 10
+            },
+            {
+                id: 'q_indo_7',
+                subject: 'bahasa',
+                topic: 'Menilai Kesesuaian Pernyataan',
+                difficulty: 'sedang',
+                type: 'pg_kompleks',
+                stem: 'Bacalah teks berikut!\n"Terumbu karang merupakan tempat tinggal bagi jutaan spesies laut. Kerusakan terumbu karang yang disebabkan oleh penangkapan ikan menggunakan bahan peledak dapat mengganggu rantai makanan laut dan menurunkan hasil tangkapan nelayan secara signifikan."\n\nPilihlah seluruh pernyataan berikut yang SESUAI dengan isi bacaan di atas:',
+                options: [
+                    'Terumbu karang menjadi habitat bagi berbagai jenis makhluk hidup di laut.',
+                    'Penggunaan bahan peledak oleh nelayan dapat merusak kelestarian terumbu karang.',
+                    'Kerusakan terumbu karang akan meningkatkan hasil tangkapan ikan nelayan.',
+                    'Rantai makanan di laut dapat terganggu akibat rusaknya terumbu karang.'
+                ],
+                answer: '0,1,3',
+                explanation: 'Pernyataan 1, 2, dan 4 secara eksplisit sesuai dengan isi bacaan. Pernyataan 3 tidak sesuai karena kerusakan terumbu karang justru menurunkan (bukan meningkatkan) hasil tangkapan nelayan.',
+                score: 15
+            },
+            {
+                id: 'q_indo_8',
+                subject: 'bahasa',
+                topic: 'Hubungan Sebab-Akibat',
+                difficulty: 'mudah',
+                type: 'pg',
+                stem: 'Bacalah kalimat berikut!\n"Penebangan pohon secara liar di kawasan lereng gunung menyebabkan tanah tidak lagi memiliki resapan air, sehingga ancaman bencana tanah longsor meningkat saat musim hujan."\n\nPenyebab utama meningkatnya risiko tanah longsor pada kalimat tersebut adalah...',
+                options: [
+                    'Tingginya curah hujan di daerah perkotaan.',
+                    'Penebangan pohon secara liar di lereng gunung.',
+                    'Banyaknya warga yang membangun rumah di lereng.',
+                    'Kurangnya tempat pembuangan sampah warga.'
+                ],
+                answer: '1',
+                explanation: 'Sebab terjadinya hilangnya resapan air dan meningkatnya ancaman longsor secara langsung dinyatakan yaitu akibat penebangan pohon liar di lereng gunung.',
+                score: 10
+            },
+            {
+                id: 'q_indo_9',
+                subject: 'bahasa',
+                topic: 'Membandingkan Dua Teks',
+                difficulty: 'sulit',
+                type: 'pg',
+                stem: 'Teks 1: "Olahraga rutin setiap pagi seperti jalan santai atau bersepeda dapat meningkatkan kebugaran tubuh serta melancarkan peredaran darah."\nTeks 2: "Mengonsumsi buah dan sayuran segar secara teratur memberikan asupan vitamin penting yang memperkuat daya tahan tubuh dari serangan penyakit."\n\nPersamaan fokus pembahasan dari kedua teks di atas adalah...',
+                options: [
+                    'Sama-sama membahas tata cara berolahraga yang benar.',
+                    'Sama-sama membahas upaya menjaga kesehatan dan kebugaran tubuh.',
+                    'Sama-sama menjelaskan jenis makanan bergizi bagi anak-anak.',
+                    'Sama-sama menyajikan jadwal kegiatan di pagi hari.'
+                ],
+                answer: '1',
+                explanation: 'Teks 1 berfokus pada olahraga dan Teks 2 berfokus pada nutrisi buah/sayur. Keduanya memiliki persamaan yaitu memberikan langkah-langkah untuk menjaga kesehatan/kebugaran tubuh.',
+                score: 15
+            }
+        ];
+
+        /**
+         * APPLICATION CORE STATE ENGINE
+         */
+        class AppEngine {
+            constructor() {
+               class AppEngine {
+    constructor() {
+        // ... constructor yang sudah ada ...
+    }
+
+    // ==========================================
+    // FUNGSI SINKRONISASI ONLINE (GOOGLE SHEETS)
+    // ==========================================
+    async syncToGoogleSheets(record) {
+        // Jika URL API belum diisi, lewati panggilan network
+        if (!GAS_API_URL || GAS_API_URL.includes("AKfycbx...")) {
+            console.log("GAS_API_URL belum dikonfigurasi. Data disimpan di localStorage saja.");
+            return;
+        }
+
+        try {
+            const payload = {
+                action: 'saveResult',
+                data: {
+                    id: record.id,
+                    studentName: this.user.name,
+                    subject: record.subject,
+                    mode: record.mode,
+                    score: record.score,
+                    timeSpent: record.timeSpentText
+                }
+            };
+
+            // Mengirim data HTTP POST ke Google Apps Script
+            await fetch(GAS_API_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Penting agar tidak terkena CORS Policy dari Google Script
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            console.log("✅ Berhasil mengirim data nilai ke Google Sheets!");
+            this.showToast("Nilai berhasil tersinkronisasi ke Cloud Google Sheets!", "success");
+
+        } catch (error) {
+            console.error("❌ Gagal mengoneksikan ke Google Sheets:", error);
+            this.showToast("Peringatan: Gagal mengirim nilai ke online database.", "warning");
+        }
+    }
+    
+    // ... sisa kode class AppEngine ...
+}
+            }
+
+            // --- GOOGLE SHEETS SINKRONISASI ONLINE ---
+            async syncToGoogleSheets(record) {
+                if (!GAS_API_URL || GAS_API_URL.includes("AKfycbx...")) {
+                    console.log("GAS_API_URL belum dikonfigurasi. Data disimpan di localStorage saja.");
+                    finishQuiz() {
+    clearInterval(this.timerInterval);
+    const q = this.activeQuiz;
+    this.playSound('finish');
+
+    // ... (kode kalkulasi skor yang sudah ada) ...
+
+    const sessionRecord = {
+        id: 'hist_' + Date.now(),
+        date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        subject: q.subject,
+        mode: q.mode,
+        score: finalScoreScale100,
+        correctCount: correctCount,
+        wrongCount: wrongCount,
+        emptyCount: emptyCount,
+        totalQuestions: q.questions.length,
+        timeSpentText: `${mSpent}m ${sSpent}s`,
+        topicStats: topicStats,
+        quizData: q
+    };
+
+    // 1. Simpan ke LocalStorage HP / Laptop Siswa
+    this.history.push(sessionRecord);
+    this.saveHistory();
+
+    // 2. SINKRONKAN KE GOOGLE SHEETS (ONLINE BACKEND) 🚀
+    this.syncToGoogleSheets(sessionRecord);
+
+    // 3. Tampilkan Tampilan Hasil
+    this.renderResults(sessionRecord);
+    this.navigate('results');
+}
+                    return;
+                }
+
+                try {
+                    const payload = {
+                        action: 'saveResult',
+                        data: {
+                            id: record.id,
+                            studentName: this.user.name,
+                            subject: record.subject,
+                            mode: record.mode,
+                            score: record.score,
+                            timeSpent: record.timeSpentText
+                        }
+                    };
+
+                    await fetch(GAS_API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    console.log("✅ Berhasil mengirim data nilai ke Google Sheets!");
+                    this.showToast("Nilai tersinkronisasi ke Google Sheets!", "success");
+
+                } catch (error) {
+                    console.error("❌ Gagal mengoneksikan ke Google Sheets:", error);
+                }
+            }
+
+            // --- LOCAL STORAGE HELPERS ---
+            loadUser() {
+                const saved = localStorage.getItem('tka_user');
+                return saved ? JSON.parse(saved) : { name: '', theme: 'light', sound: true };
+            }
+            saveUser() {
+                localStorage.setItem('tka_user', JSON.stringify(this.user));
+            }
+
+            loadQuestions() {
+                const saved = localStorage.getItem('tka_bank');
+                return saved ? JSON.parse(saved) : DEFAULT_QUESTIONS;
+            }
+            saveQuestions() {
+                localStorage.setItem('tka_bank', JSON.stringify(this.questions));
+            }
+
+            loadHistory() {
+                const saved = localStorage.getItem('tka_history');
+                return saved ? JSON.parse(saved) : [];
+            }
+            saveHistory() {
+                localStorage.setItem('tka_history', JSON.stringify(this.history));
+            }
+
+            // --- SOUND SYNTHESIZER (WEB AUDIO API) ---
+            playSound(type) {
+                if (!this.user.sound) return;
+                try {
+                    if (!this.audioCtx) {
+                        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    const ctx = this.audioCtx;
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+
+                    if (type === 'correct') {
+                        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                        osc.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.15);
+                        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                        osc.start();
+                        osc.stop(ctx.currentTime + 0.3);
+                    } else if (type === 'wrong') {
+                        osc.frequency.setValueAtTime(220, ctx.currentTime);
+                        osc.frequency.exponentialRampToValueAtTime(164.81, ctx.currentTime + 0.2);
+                        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                        osc.start();
+                        osc.stop(ctx.currentTime + 0.3);
+                    } else if (type === 'finish') {
+                        osc.frequency.setValueAtTime(440, ctx.currentTime);
+                        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.4);
+                        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+                        osc.start();
+                        osc.stop(ctx.currentTime + 0.5);
+                    }
+                } catch (e) {
+                    // Audio context blocked or unsupported
+                }
+            }
+
+            // --- TOAST & MODAL SYSTEM ---
+            showToast(msg, type = 'info') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                const colors = {
+                    info: 'bg-primary-600 text-white',
+                    success: 'bg-emerald-600 text-white',
+                    warning: 'bg-amber-500 text-white',
+                    error: 'bg-red-600 text-white'
+                };
+                toast.className = `${colors[type] || colors.info} px-4 py-3 rounded-2xl shadow-xl text-xs font-bold transition transform translate-y-2 opacity-0 flex items-center space-x-2 pointer-events-auto`;
+                toast.innerHTML = `<i class="fas fa-circle-info"></i><span>${msg}</span>`;
+                container.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.classList.remove('translate-y-2', 'opacity-0');
+                }, 50);
+
+                setTimeout(() => {
+                    toast.classList.add('opacity-0', 'translate-y-2');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+
+            showModal(title, bodyHtml, actionsHtml) {
+                document.getElementById('modal-title').innerText = title;
+                document.getElementById('modal-body').innerHTML = bodyHtml;
+                document.getElementById('modal-actions').innerHTML = actionsHtml;
+                
+                const backdrop = document.getElementById('modal-backdrop');
+                const card = document.getElementById('modal-card');
+                backdrop.classList.remove('hidden');
+                setTimeout(() => {
+                    card.classList.remove('scale-95', 'opacity-0');
+                }, 50);
+            }
+
+            closeModal() {
+                const backdrop = document.getElementById('modal-backdrop');
+                const card = document.getElementById('modal-card');
+                card.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => backdrop.classList.add('hidden'), 200);
+            }
+
+            // --- NAVIGATION CONTROLLER ---
+            navigate(viewId) {
+                if (!this.user.name && viewId !== 'setup') {
+                    viewId = 'setup';
+                }
+
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                const target = document.getElementById(`view-${viewId}`);
+                if (target) {
+                    target.classList.add('active');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+
+                if (viewId === 'dashboard') this.renderDashboard();
+                if (viewId === 'generator') this.updateGenTopics();
+                if (viewId === 'bank') this.renderBankList();
+                if (viewId === 'history') this.renderHistory();
+            }
+
+            // --- USER & THEME MANAGERS ---
+            init() {
+                if (this.user.theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    document.getElementById('theme-icon').className = 'fas fa-sun text-amber-400';
+                }
+                document.getElementById('sound-icon').className = this.user.sound ? 'fas fa-volume-up' : 'fas fa-volume-xmark';
+
+                if (this.user.name) {
+                    document.getElementById('nav-student-name').innerText = this.user.name;
+                    document.getElementById('dash-student-name').innerText = this.user.name;
+                    this.navigate('dashboard');
+                } else {
+                    this.navigate('setup');
+                }
+            }
+
+            toggleDarkMode() {
+                this.user.theme = this.user.theme === 'dark' ? 'light' : 'dark';
+                this.saveUser();
+                if (this.user.theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    document.getElementById('theme-icon').className = 'fas fa-sun text-amber-400';
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.getElementById('theme-icon').className = 'fas fa-moon';
+                }
+            }
+
+            toggleSound() {
+                this.user.sound = !this.user.sound;
+                this.saveUser();
+                document.getElementById('sound-icon').className = this.user.sound ? 'fas fa-volume-up' : 'fas fa-volume-xmark';
+                this.showToast(this.user.sound ? 'Efek Suara Diaktifkan' : 'Efek Suara Dimatikan', 'info');
+            }
+
+            saveUserProfile(e) {
+                e.preventDefault();
+                const input = document.getElementById('setup-name-input').value.trim();
+                if (input) {
+                    this.user.name = input;
+                    this.saveUser();
+                    document.getElementById('nav-student-name').innerText = input;
+                    document.getElementById('dash-student-name').innerText = input;
+                    this.showToast(`Selamat datang, ${input}!`, 'success');
+                    this.navigate('dashboard');
+                }
+            }
